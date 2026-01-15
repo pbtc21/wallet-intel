@@ -10,6 +10,508 @@ import { cors } from 'hono/cors';
 const app = new Hono();
 app.use('*', cors());
 
+// Frontend HTML
+function getFrontendHtml() {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wallet Intelligence | Deep Stacks Wallet Analysis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #12121a;
+      --surface-2: #1a1a25;
+      --border: #2a2a3a;
+      --text: #e4e4e7;
+      --text-muted: #71717a;
+      --accent: #06b6d4;
+      --accent-2: #22d3ee;
+      --green: #22c55e;
+      --orange: #f97316;
+      --blue: #3b82f6;
+      --red: #ef4444;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 0.5rem 1rem;
+      border-radius: 2rem;
+      font-size: 0.85rem;
+      color: var(--accent-2);
+      margin-bottom: 1.5rem;
+    }
+
+    h1 {
+      font-size: 2.75rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--text) 0%, var(--accent-2) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 1rem;
+    }
+
+    .subtitle {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      max-width: 550px;
+      margin: 0 auto;
+    }
+
+    .search-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      padding: 1rem 1.25rem;
+      border-radius: 0.5rem;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--accent);
+    }
+
+    input[type="text"]::placeholder {
+      color: var(--text-muted);
+    }
+
+    button {
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 500;
+      padding: 1rem 2rem;
+      border-radius: 0.5rem;
+      border: none;
+      background: var(--accent);
+      color: #000;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    button:hover { background: var(--accent-2); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .search-hint {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .feature {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.25rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+
+    .feature-icon {
+      font-size: 1.5rem;
+      line-height: 1;
+    }
+
+    .feature h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .feature p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .pricing {
+      background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .pricing h2 {
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .pricing-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .pricing-card h3 {
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .price {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--accent-2);
+      margin-bottom: 0.5rem;
+    }
+
+    .price-unit {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .result-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      display: none;
+    }
+
+    .result-section.visible { display: block; }
+
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .wallet-address {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .bns-name {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--accent-2);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat {
+      background: var(--surface-2);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .risk-low { color: var(--green); }
+    .risk-medium { color: var(--orange); }
+    .risk-high { color: var(--red); }
+
+    .insights-list {
+      margin-top: 1.5rem;
+    }
+
+    .insight {
+      background: var(--surface-2);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      border-left: 3px solid var(--border);
+    }
+
+    .insight.info { border-left-color: var(--blue); }
+    .insight.warning { border-left-color: var(--orange); }
+    .insight.opportunity { border-left-color: var(--green); }
+    .insight.risk { border-left-color: var(--red); }
+
+    .insight-title {
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .insight-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .insight-action {
+      font-size: 0.8rem;
+      color: var(--accent-2);
+      margin-top: 0.5rem;
+    }
+
+    footer {
+      text-align: center;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    footer a {
+      color: var(--accent-2);
+      text-decoration: none;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 640px) {
+      h1 { font-size: 2rem; }
+      .container { padding: 2rem 1rem; }
+      .search-box { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="badge">
+        <span>Wallet Intel</span>
+        <span>•</span>
+        <span>x402 Powered</span>
+      </div>
+      <h1>Wallet Intelligence</h1>
+      <p class="subtitle">Deep analysis of any Stacks wallet. Holdings, DeFi positions, risk assessment, and actionable insights.</p>
+    </header>
+
+    <div class="search-section">
+      <div class="search-box">
+        <input type="text" id="address-input" placeholder="SP... or SM... address" />
+        <button onclick="analyzeWallet()">Analyze</button>
+      </div>
+      <p class="search-hint">Enter a Stacks address to get a free preview. Full report requires x402 payment.</p>
+    </div>
+
+    <div class="features">
+      <div class="feature">
+        <span class="feature-icon">💰</span>
+        <div>
+          <h3>Portfolio Value</h3>
+          <p>Real-time USD valuations across all tokens</p>
+        </div>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">📊</span>
+        <div>
+          <h3>Risk Score</h3>
+          <p>0-100 risk assessment with level rating</p>
+        </div>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">🔗</span>
+        <div>
+          <h3>DeFi Detection</h3>
+          <p>ALEX, Velar, Arkadiko, StackingDAO</p>
+        </div>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">💡</span>
+        <div>
+          <h3>Insights</h3>
+          <p>Actionable opportunities and warnings</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="pricing">
+      <h2>Pricing</h2>
+      <div class="pricing-grid">
+        <div class="pricing-card">
+          <h3>Quick Summary</h3>
+          <div class="price">0.025 STX</div>
+          <div class="price-unit">Basic overview</div>
+        </div>
+        <div class="pricing-card">
+          <h3>Full Report</h3>
+          <div class="price">0.1 STX</div>
+          <div class="price-unit">Complete analysis</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="result-section" class="result-section">
+      <div class="result-header">
+        <div>
+          <div id="bns-name" class="bns-name"></div>
+          <div id="wallet-address" class="wallet-address"></div>
+        </div>
+      </div>
+      <div id="stats-grid" class="stats-grid"></div>
+      <div id="insights-list" class="insights-list"></div>
+    </div>
+
+    <footer>
+      <p>Part of the <a href="https://pbtc21.dev">pbtc21.dev</a> ecosystem</p>
+      <p style="margin-top: 0.5rem;">Powered by Stacks • x402 Protocol</p>
+    </footer>
+  </div>
+
+  <script>
+    async function analyzeWallet() {
+      const address = document.getElementById('address-input').value.trim();
+      if (!address || (!address.startsWith('SP') && !address.startsWith('SM'))) {
+        alert('Please enter a valid Stacks address');
+        return;
+      }
+
+      const resultSection = document.getElementById('result-section');
+      resultSection.className = 'result-section visible';
+      resultSection.innerHTML = '<div class="loading">Analyzing wallet...</div>';
+
+      try {
+        // Try quick endpoint (will return 402 but shows the concept)
+        const res = await fetch('/quick/' + address);
+
+        if (res.status === 402) {
+          const payment = await res.json();
+          resultSection.innerHTML = \`
+            <div class="result-header">
+              <div>
+                <div class="wallet-address">\${address}</div>
+              </div>
+            </div>
+            <div style="text-align: center; padding: 2rem;">
+              <h3 style="margin-bottom: 1rem;">Payment Required</h3>
+              <p style="color: var(--text-muted); margin-bottom: 1rem;">Full analysis requires \${payment.payment.price / 1000000} STX</p>
+              <p style="font-size: 0.85rem; color: var(--text-muted);">
+                1. Call <code style="background: var(--surface-2); padding: 0.2rem 0.5rem; border-radius: 0.25rem;">\${payment.payment.contract}</code><br>
+                2. Retry with X-Payment header
+              </p>
+            </div>
+          \`;
+          return;
+        }
+
+        const data = await res.json();
+
+        resultSection.innerHTML = \`
+          <div class="result-header">
+            <div>
+              \${data.bnsName ? \`<div class="bns-name">\${data.bnsName}</div>\` : ''}
+              <div class="wallet-address">\${data.address}</div>
+            </div>
+          </div>
+          <div class="stats-grid">
+            <div class="stat">
+              <div class="stat-value">\${data.summary.totalValueUsd}</div>
+              <div class="stat-label">Total Value</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">\${data.summary.stxBalance}</div>
+              <div class="stat-label">STX Balance</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">\${data.summary.tokenCount}</div>
+              <div class="stat-label">Tokens</div>
+            </div>
+          </div>
+          \${data.summary.topHoldings?.length ? \`
+            <div style="margin-top: 1rem;">
+              <h4 style="font-size: 0.9rem; margin-bottom: 0.75rem;">Top Holdings</h4>
+              \${data.summary.topHoldings.map(h => \`
+                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border);">
+                  <span>\${h.symbol}</span>
+                  <span style="color: var(--text-muted);">\${h.value} \${h.change24h ? \`<span style="color: \${h.change24h.startsWith('+') ? 'var(--green)' : 'var(--red)'}">\${h.change24h}</span>\` : ''}</span>
+                </div>
+              \`).join('')}
+            </div>
+          \` : ''}
+        \`;
+      } catch (err) {
+        resultSection.innerHTML = '<div class="loading" style="color: var(--red);">Error: ' + err.message + '</div>';
+      }
+    }
+
+    // Allow enter key
+    document.getElementById('address-input').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') analyzeWallet();
+    });
+  </script>
+</body>
+</html>`;
+}
+
 // Payment config
 const CONTRACT = {
   address: 'SPP5ZMH9NQDFD2K5CEQZ6P02AP8YPWMQ75TJW20M',
@@ -502,8 +1004,12 @@ function generateInsights(report: WalletReport): WalletReport['insights'] {
   return insights;
 }
 
-// Root - API info
+// Root - API info / Frontend
 app.get('/', (c) => {
+  const accept = c.req.header('Accept') || '';
+  if (accept.includes('text/html')) {
+    return c.html(getFrontendHtml());
+  }
   return c.json({
     name: 'Wallet Intelligence API',
     description: 'Deep analysis of any Stacks wallet - holdings, DeFi positions, risk score, actionable insights',
