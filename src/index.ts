@@ -1069,6 +1069,104 @@ app.get('/', (c) => {
 
 app.get('/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
+// x402 Discovery endpoint
+app.get('/.well-known/x402', (c) => {
+  return c.json({
+    x402Version: 1,
+    name: 'Wallet Intelligence',
+    description: 'Deep analysis of any Stacks wallet - holdings, DeFi positions, risk score, actionable insights',
+    accepts: [
+      {
+        scheme: 'exact',
+        network: 'stacks',
+        maxAmountRequired: String(PRICING.quickSummary),
+        resource: '/quick/:address',
+        description: 'Quick wallet summary with total value, STX balance, and top holdings',
+        mimeType: 'application/json',
+        payTo: PAYMENT_ADDRESS,
+        maxTimeoutSeconds: 300,
+        asset: 'sBTC',
+        outputSchema: {
+          input: {
+            type: 'object',
+            properties: {
+              address: { type: 'string', description: 'Stacks wallet address (SP... or SM...)' }
+            },
+            required: ['address']
+          },
+          output: {
+            type: 'object',
+            properties: {
+              address: { type: 'string' },
+              bnsName: { type: 'string', nullable: true },
+              timestamp: { type: 'string' },
+              summary: {
+                type: 'object',
+                properties: {
+                  totalValueUsd: { type: 'string' },
+                  stxBalance: { type: 'string' },
+                  stxPrice: { type: 'string' },
+                  tokenCount: { type: 'number' },
+                  topHoldings: { type: 'array' }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        scheme: 'exact',
+        network: 'stacks',
+        maxAmountRequired: String(PRICING.fullReport),
+        resource: '/analyze/:address',
+        description: 'Full wallet intelligence report with risk score, DeFi positions, NFTs, and insights',
+        mimeType: 'application/json',
+        payTo: PAYMENT_ADDRESS,
+        maxTimeoutSeconds: 300,
+        asset: 'sBTC',
+        outputSchema: {
+          input: {
+            type: 'object',
+            properties: {
+              address: { type: 'string', description: 'Stacks wallet address (SP... or SM...)' }
+            },
+            required: ['address']
+          },
+          output: {
+            type: 'object',
+            properties: {
+              address: { type: 'string' },
+              bnsName: { type: 'string', nullable: true },
+              timestamp: { type: 'string' },
+              summary: {
+                type: 'object',
+                properties: {
+                  totalValueUsd: { type: 'number' },
+                  stxBalance: { type: 'number' },
+                  stxPrice: { type: 'number' },
+                  tokenCount: { type: 'number' },
+                  nftCount: { type: 'number' },
+                  defiProtocols: { type: 'number' },
+                  riskScore: { type: 'number', description: '0-100 risk score' },
+                  riskLevel: { type: 'string', enum: ['low', 'medium', 'high'] },
+                  activityLevel: { type: 'string' },
+                  portfolioHealth: { type: 'string' }
+                }
+              },
+              allocation: { type: 'object' },
+              tokens: { type: 'array' },
+              nfts: { type: 'array' },
+              defi: { type: 'array' },
+              recentActivity: { type: 'object' },
+              insights: { type: 'array' }
+            }
+          }
+        }
+      }
+    ]
+  });
+});
+
 // Full wallet analysis
 app.get('/analyze/:address', async (c) => {
   const address = c.req.param('address');
