@@ -512,14 +512,38 @@ function getFrontendHtml() {
 </html>`;
 }
 
-// Payment config
-const CONTRACT = {
-  address: 'SPP5ZMH9NQDFD2K5CEQZ6P02AP8YPWMQ75TJW20M',
-  name: 'simple-oracle',
-  price: 100000, // 0.1 STX for full report
-  quickPrice: 25000, // 0.025 STX for quick summary
-  recipient: 'SPP5ZMH9NQDFD2K5CEQZ6P02AP8YPWMQ75TJW20M',
+// Payment config - sBTC only
+const PAYMENT_ADDRESS = 'SPKH9AWG0ENZ87J1X0PBD4HETP22G8W22AFNVF8K'
+const PRICING = {
+  fullReport: 2500, // 2500 sats (~$2.50) for full wallet intelligence report
+  quickSummary: 500, // 500 sats (~$0.50) for quick summary
 };
+
+// Legacy CONTRACT constant for compatibility with existing code
+const CONTRACT = {
+  address: PAYMENT_ADDRESS,
+  name: 'sbtc-payment',
+  price: PRICING.fullReport,
+  quickPrice: PRICING.quickSummary,
+  priceSbtc: PRICING.fullReport,
+  quickPriceSbtc: PRICING.quickSummary,
+  recipient: PAYMENT_ADDRESS,
+};
+
+// sBTC contract
+const SBTC_CONTRACT = {
+  address: 'SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9',
+  name: 'token-sbtc',
+};
+
+type PaymentTokenType = 'STX' | 'sBTC';
+
+function getPaymentTokenType(c: any): PaymentTokenType {
+  const queryToken = c.req.query('tokenType');
+  const headerToken = c.req.header('X-PAYMENT-TOKEN-TYPE');
+  const tokenStr = (headerToken || queryToken || 'STX').toUpperCase();
+  return tokenStr === 'SBTC' ? 'sBTC' : 'STX';
+}
 
 const HIRO_API = 'https://api.hiro.so';
 const TENERO_API = 'https://api.tenero.io';
@@ -614,29 +638,31 @@ interface WalletReport {
 let priceCache: { stx: number; timestamp: number } | null = null;
 const PRICE_CACHE_TTL = 5 * 60 * 1000;
 
-// Payment required response
-function paymentRequired(c: any, resource: string, price: number) {
+// Payment required response - sBTC only
+function paymentRequired(c: any, resource: string, _price: number, sbtcPrice?: number) {
+  const nonce = crypto.randomUUID();
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
   return c.json({
     error: 'Payment Required',
     code: 'PAYMENT_REQUIRED',
     resource,
-    payment: {
-      contract: `${CONTRACT.address}.${CONTRACT.name}`,
-      function: 'call-with-stx',
-      price,
-      token: 'STX',
-      recipient: CONTRACT.recipient,
-      network: 'mainnet',
-    },
+    nonce,
+    expiresAt,
+    network: 'mainnet',
+    maxAmountRequired: (sbtcPrice || PRICING.fullReport).toString(),
+    payTo: PAYMENT_ADDRESS,
+    tokenType: 'sBTC',
+    tokenContract: SBTC_CONTRACT,
     instructions: [
-      '1. Call the contract function with STX payment',
-      '2. Wait for transaction confirmation',
-      '3. Retry request with X-Payment header containing txid',
+      '1. Sign an sBTC transfer transaction',
+      '2. Include the signed transaction hex in X-Payment header',
+      '3. Transaction will be broadcast and verified',
     ],
   }, 402);
 }
 
-// Verify payment
+// Verify sBTC payment
 async function verifyPayment(txid: string): Promise<{ valid: boolean; error?: string; caller?: string }> {
   try {
     const normalizedTxid = txid.startsWith('0x') ? txid : `0x${txid}`;
@@ -645,10 +671,13 @@ async function verifyPayment(txid: string): Promise<{ valid: boolean; error?: st
 
     const tx = await response.json() as any;
     if (tx.tx_status !== 'success') return { valid: false, error: `Transaction status: ${tx.tx_status}` };
-    if (tx.tx_type !== 'contract_call') return { valid: false, error: 'Not a contract call' };
 
-    const expectedContract = `${CONTRACT.address}.${CONTRACT.name}`;
-    if (tx.contract_call?.contract_id !== expectedContract) return { valid: false, error: 'Wrong contract' };
+    // Accept sBTC transfers
+    if (tx.tx_type === 'contract_call') {
+      if (!tx.contract_call?.contract_id?.includes('sbtc')) {
+        return { valid: false, error: 'Not an sBTC transfer' };
+      }
+    }
 
     return { valid: true, caller: tx.sender_address };
   } catch (error) {
@@ -1046,7 +1075,7 @@ app.get('/analyze/:address', async (c) => {
   const paymentTxid = c.req.header('X-Payment');
 
   if (!paymentTxid) {
-    return paymentRequired(c, `/analyze/${address}`, CONTRACT.price);
+    return paymentRequired(c, `/analyze/${address}`, CONTRACT.price, CONTRACT.priceSbtc);
   }
 
   const verification = await verifyPayment(paymentTxid);
@@ -1130,7 +1159,7 @@ app.get('/quick/:address', async (c) => {
   const paymentTxid = c.req.header('X-Payment');
 
   if (!paymentTxid) {
-    return paymentRequired(c, `/quick/${address}`, CONTRACT.quickPrice);
+    return paymentRequired(c, `/quick/${address}`, CONTRACT.quickPrice, CONTRACT.quickPriceSbtc);
   }
 
   const verification = await verifyPayment(paymentTxid);
